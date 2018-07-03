@@ -16,9 +16,11 @@ def request_movies():
     cinemas_url = 'http://maoyan.com/cinemas'
     movies = requests.get(url=url,headers = headers).text
     movies = json.loads(movies)['data']['movies']
+    movies_data = serch_movies()
     for movie in movies:
-        # insert_db(movie)
-        print(movie)
+        if movie['nm'] not in movies_data:
+            insert_db(movie)
+            print(movie['nm'])
 
 def get_cinema():
     url = "http://maoyan.com/cinema/13141?poi=6521162"
@@ -61,5 +63,5 @@ def clear_data(html):
 
 
 if __name__ == '__main__':
-    # request_movies()
-    get_cinema()
+    request_movies()
+    # get_cinema()

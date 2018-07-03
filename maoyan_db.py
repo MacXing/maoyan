@@ -45,5 +45,14 @@ def insert_movie_info(a,b,c,d,e,f,g):
         cursor.close()
         conn.close()
 
+def serch_movies():
+    conn = connection()
+    cursor = conn.cursor()
+    sql='''
+        SELECT NAME_MOVIES FROM MAOYAN_MOVIES
+    '''
+    cursor.execute(sql)
+    return [d[0] for d in cursor.fetchall()]
+
 if __name__ == '__main__':
     insert_db()
