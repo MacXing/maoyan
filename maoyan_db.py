@@ -7,7 +7,7 @@ import pymysql
 import time
 
 def connection():
-    return pymysql.connect(host='192.168.160.36', port=3306,
+    return pymysql.connect(host='localhost', port=3306,
                                   user='root', passwd='gzxiaoi', db='crawler', charset='utf8')
 
 def insert_db(movie):
