@@ -20,6 +20,9 @@ class MAOYAN:
         self.orm = ORM()
         self.log = LOG()
         self.logger = self.log.get_logger()
+        self.logger.info('*'*25)
+        self.logger.info("Star:"+datetime.datetime.now().strftime("%Y-%m-%d"))
+        self.logger.info('*' * 25)
 
     def request_movies_info(self):
         url = "http://maoyan.com/films"
@@ -120,7 +123,7 @@ class MAOYAN:
         解析票房的字符
     '''
 
-    def get_movie_ticket(self, html):
+    def get_movie_ticket(self, html, flag=False):
         p = re.compile(r"url\('(.*?)'\) format\('woff'\);")
         uni_font_url = re.findall(p, html)
         url = 'http:%s' % uni_font_url[0]
@@ -147,6 +150,16 @@ class MAOYAN:
         for key in temp.keys():
             initstr = key + ';'
             html = html.replace(initstr, str(temp[key]))
+        if flag:
+            return html
+        else:
+            return self.find_ticket(html)
+
+    '''
+        统一票房单位/万元
+    '''
+
+    def find_ticket(self, html):
         bs4 = BeautifulSoup(html, 'html.parser')
         div = bs4.find_all('div', 'movie-index-content box')
         try:
@@ -155,10 +168,6 @@ class MAOYAN:
         except:
             self.logger.error("电影票房爬取错误")
             return ''
-
-    '''
-        统一票房单位/万元
-    '''
 
     def unite_ticket(self, ticket):
         try:
@@ -179,7 +188,53 @@ class MAOYAN:
         except:
             self.logger.error("票房价格转换错误")
 
+    def get_cinema(self, url):
+        html = requests.get(url=url, headers=self.headers).text.replace('&#', '0')
+        html = self.get_movie_ticket(html, flag=True)
+        # save_html('./demo.html', html)
+        # html = read_html('./demo.html')
+        bs = BeautifulSoup(html, 'html.parser')
+        for d in bs.find_all('div', 'show-list'):
+            cinema = {}
+            movie_name = d.find('h3', 'movie-name').text
+            movie_time = datetime.datetime.now().strftime('%Y') + '年' + d.find('span', 'date-item active').text.split()[
+                -1]
+            cinema['movie_name'] = movie_name
+            cinema['movie_time'] = movie_time
+            for r in d.find('tbody').find_all('tr'):
+                td = r.find_all('td')[:-1]
+                movie_open_time = td[0].find('span', 'begin-time').text
+                movie_close_time = td[0].find('span', 'end-time').text
+                movie_lan = td[1].span.text
+                movie_address = td[2].span.text
+                movie_price = float(td[3].find('span', 'stonefont').text)
+                is_2d, is_3d = self.is3D(movie_lan)
+                cinema['movie_open_time'] = movie_open_time
+                cinema['movie_close_time'] = movie_close_time
+                cinema['movie_lan'] = movie_lan
+                cinema['movie_address'] = movie_address
+                cinema['movie_price'] = movie_price
+                cinema['is_2d'] = is_2d
+                cinema['is_3d'] = is_3d
+                self.orm.insert_movie_cinema(cinema)
+                self.logger.info(cinema)
+                # print(movie_name, movie_time, movie_open_time, movie_close_time, movie_lan, movie_address, movie_price,
+                #       is_2d, is_3d)
+
+    def is3D(self, value):
+        try:
+            if '2D' in value.upper():
+
+                return True, False
+            else:
+
+                return False, True
+        except:
+
+            return False, False
+
 
 if __name__ == '__main__':
     my = MAOYAN()
     my.request_movies_info()
+    my.get_cinema('http://maoyan.com/cinema/13141?poi=6521162')
