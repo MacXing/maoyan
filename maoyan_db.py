@@ -47,7 +47,7 @@ class YSFZ_MANAGER_MOVIE_INFO(declarative_base()):
 class ORM:
     def __init__(self):
         # 初始化数据库连接:
-        self.engine = create_engine('mysql+pymysql://root:soif*324#fsIIH@172.16.205.46:3306/YSFZ_MANAGER?charset=utf8')
+        self.engine = create_engine('mysql+pymysql://root:password@localhost:3306/YSFZ_MANAGER?charset=utf8')
         # 创建DBSession类型:
         self.DBSession = sessionmaker(bind=self.engine)
 
